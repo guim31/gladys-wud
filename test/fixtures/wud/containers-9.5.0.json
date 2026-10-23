@@ -1,0 +1,312 @@
+[
+  {
+    "id": "60bded4201fe719659994ccaa823cce2d2b55a4d060428ffe2a710f06060e219",
+    "name": "alpine",
+    "displayName": "alpine",
+    "displayIcon": "mdi:docker",
+    "status": "running",
+    "watcher": "local",
+    "stack": null,
+    "includeTags": null,
+    "excludeTags": null,
+    "transformTags": null,
+    "linkTemplate": null,
+    "link": "https://hub.docker.com/_/alpine",
+    "triggerInclude": null,
+    "triggerExclude": null,
+    "labels": {},
+    "snoozedVersion": null,
+    "snoozedUntil": null,
+    "delay": null,
+    "image": {
+      "id": "sha256:de0eb0b3f2a47ba1eb89389859a9bd88b28e82f5826b6969ad604979713c2d4f",
+      "registry": {
+        "name": "hub.public",
+        "url": "https://registry-1.docker.io/v2"
+      },
+      "name": "library/alpine",
+      "tag": {
+        "value": "3.18",
+        "semver": true
+      },
+      "digest": {
+        "watch": false,
+        "value": null,
+        "repo": "sha256:de0eb0b3f2a47ba1eb89389859a9bd88b28e82f5826b6969ad604979713c2d4f"
+      },
+      "architecture": "amd64",
+      "os": "linux",
+      "variant": null,
+      "created": "2025-02-14T03:03:06.000Z"
+    },
+    "result": {
+      "tag": "3.24",
+      "digest": null,
+      "created": null,
+      "link": null
+    },
+    "updateAvailable": true,
+    "updateKind": {
+      "kind": "tag",
+      "localValue": "3.18",
+      "remoteValue": "3.24",
+      "semverDiff": "minor"
+    },
+    "isOfficial": true,
+    "changelogUrl": null,
+    "upstreamUrl": null,
+    "documentationUrl": "https://hub.docker.com/_/alpine",
+    "isCoolingDown": false,
+    "isSnoozed": false,
+    "coolingDownUntil": null
+  },
+  {
+    "id": "7633ddc1eb64bc41c21e507c9b0413c85c0282bef84204cde6e69a2d4a51fa37",
+    "name": "busybox",
+    "displayName": "busybox",
+    "displayIcon": "mdi:docker",
+    "status": "running",
+    "watcher": "local",
+    "stack": null,
+    "includeTags": null,
+    "excludeTags": null,
+    "transformTags": null,
+    "linkTemplate": null,
+    "link": "https://hub.docker.com/_/busybox",
+    "triggerInclude": null,
+    "triggerExclude": null,
+    "labels": {},
+    "snoozedVersion": null,
+    "snoozedUntil": null,
+    "delay": null,
+    "image": {
+      "id": "sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e",
+      "registry": {
+        "name": "hub.public",
+        "url": "https://registry-1.docker.io/v2"
+      },
+      "name": "library/busybox",
+      "tag": {
+        "value": "latest",
+        "semver": false
+      },
+      "digest": {
+        "watch": false,
+        "value": null,
+        "repo": "sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e"
+      },
+      "architecture": "amd64",
+      "os": "linux",
+      "variant": null,
+      "created": "2026-05-13T02:21:49.000Z"
+    },
+    "result": {
+      "tag": "latest",
+      "digest": null,
+      "created": null,
+      "link": null
+    },
+    "updateAvailable": false,
+    "updateKind": {
+      "kind": "unknown",
+      "localValue": null,
+      "remoteValue": null,
+      "semverDiff": null
+    },
+    "isOfficial": true,
+    "changelogUrl": null,
+    "upstreamUrl": null,
+    "documentationUrl": "https://hub.docker.com/_/busybox",
+    "isCoolingDown": false,
+    "isSnoozed": false,
+    "coolingDownUntil": null
+  },
+  {
+    "id": "38190a2806bceb699db17500f0cd5cca7c37d7529f68e7035d8838eac40dc21e",
+    "name": "nginx",
+    "displayName": "nginx",
+    "displayIcon": "mdi:docker",
+    "status": "running",
+    "watcher": "local",
+    "stack": null,
+    "includeTags": null,
+    "excludeTags": null,
+    "transformTags": null,
+    "linkTemplate": null,
+    "link": "https://hub.docker.com/_/nginx",
+    "triggerInclude": null,
+    "triggerExclude": null,
+    "labels": {
+      "maintainer": "NGINX Docker Maintainers <docker-maint@nginx.com>"
+    },
+    "snoozedVersion": null,
+    "snoozedUntil": null,
+    "delay": null,
+    "image": {
+      "id": "sha256:b997b0db9c2bc0a2fb803ced5fb9ff3a757e54903a28ada3e50412cc3ab7822f",
+      "registry": {
+        "name": "hub.public",
+        "url": "https://registry-1.docker.io/v2"
+      },
+      "name": "library/nginx",
+      "tag": {
+        "value": "1.25.0",
+        "semver": true
+      },
+      "digest": {
+        "watch": false,
+        "value": null,
+        "repo": "sha256:b997b0db9c2bc0a2fb803ced5fb9ff3a757e54903a28ada3e50412cc3ab7822f"
+      },
+      "architecture": "amd64",
+      "os": "linux",
+      "variant": null,
+      "created": "2023-06-13T07:15:33.483Z"
+    },
+    "result": {
+      "tag": "1.31.8",
+      "digest": null,
+      "created": null,
+      "link": null
+    },
+    "updateAvailable": true,
+    "updateKind": {
+      "kind": "tag",
+      "localValue": "1.25.0",
+      "remoteValue": "1.31.8",
+      "semverDiff": "minor"
+    },
+    "isOfficial": true,
+    "changelogUrl": null,
+    "upstreamUrl": null,
+    "documentationUrl": "https://hub.docker.com/_/nginx",
+    "isCoolingDown": false,
+    "isSnoozed": false,
+    "coolingDownUntil": null
+  },
+  {
+    "id": "d524d1a0474e23427cb65d5b853cd9a39ad12e9d9a1bba0582b1419f773745be",
+    "name": "private-tool",
+    "displayName": "private-tool",
+    "displayIcon": "mdi:docker",
+    "status": "running",
+    "watcher": "local",
+    "stack": null,
+    "includeTags": null,
+    "excludeTags": null,
+    "transformTags": null,
+    "linkTemplate": null,
+    "link": null,
+    "triggerInclude": null,
+    "triggerExclude": null,
+    "labels": {},
+    "snoozedVersion": null,
+    "snoozedUntil": null,
+    "delay": null,
+    "image": {
+      "id": "sha256:de0eb0b3f2a47ba1eb89389859a9bd88b28e82f5826b6969ad604979713c2d4f",
+      "registry": {
+        "name": "unknown",
+        "url": "registry.example.invalid"
+      },
+      "name": "tools/alpine",
+      "tag": {
+        "value": "1.0.0",
+        "semver": true
+      },
+      "digest": {
+        "watch": false,
+        "value": null,
+        "repo": "sha256:de0eb0b3f2a47ba1eb89389859a9bd88b28e82f5826b6969ad604979713c2d4f"
+      },
+      "architecture": "amd64",
+      "os": "linux",
+      "variant": null,
+      "created": "2025-02-14T03:03:06.000Z"
+    },
+    "result": {
+      "tag": "1.0.0",
+      "digest": null,
+      "created": null,
+      "link": null
+    },
+    "error": {
+      "message": "Unsupported Registry unknown"
+    },
+    "updateAvailable": false,
+    "updateKind": {
+      "kind": "unknown",
+      "localValue": null,
+      "remoteValue": null,
+      "semverDiff": null
+    },
+    "isOfficial": false,
+    "changelogUrl": null,
+    "upstreamUrl": null,
+    "documentationUrl": null,
+    "isCoolingDown": false,
+    "isSnoozed": false,
+    "coolingDownUntil": null
+  },
+  {
+    "id": "6f82f29a73b4387a65bbb21f463dd4cb25ee5b93fe7ff77c84cd1b4ec9129e24",
+    "name": "redis",
+    "displayName": "redis",
+    "displayIcon": "mdi:docker",
+    "status": "running",
+    "watcher": "local",
+    "stack": null,
+    "includeTags": null,
+    "excludeTags": null,
+    "transformTags": null,
+    "linkTemplate": null,
+    "link": "https://hub.docker.com/_/redis",
+    "triggerInclude": null,
+    "triggerExclude": null,
+    "labels": {},
+    "snoozedVersion": null,
+    "snoozedUntil": null,
+    "delay": null,
+    "image": {
+      "id": "sha256:1b90dbfe6943c72a7469c134cad3f02eb810f016049a0e19ad78be07040cdb0c",
+      "registry": {
+        "name": "hub.public",
+        "url": "https://registry-1.docker.io/v2"
+      },
+      "name": "library/redis",
+      "tag": {
+        "value": "7.0.0",
+        "semver": true
+      },
+      "digest": {
+        "watch": false,
+        "value": null,
+        "repo": "sha256:1b90dbfe6943c72a7469c134cad3f02eb810f016049a0e19ad78be07040cdb0c"
+      },
+      "architecture": "amd64",
+      "os": "linux",
+      "variant": null,
+      "created": "2022-05-28T10:25:14.900Z"
+    },
+    "result": {
+      "tag": "8.10.2",
+      "digest": null,
+      "created": null,
+      "link": null
+    },
+    "updateAvailable": true,
+    "updateKind": {
+      "kind": "tag",
+      "localValue": "7.0.0",
+      "remoteValue": "8.10.2",
+      "semverDiff": "major"
+    },
+    "isOfficial": true,
+    "changelogUrl": null,
+    "upstreamUrl": null,
+    "documentationUrl": "https://hub.docker.com/_/redis",
+    "isCoolingDown": false,
+    "isSnoozed": false,
+    "coolingDownUntil": null
+  }
+]

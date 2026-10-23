@@ -1,8 +1,8 @@
 {
-  "name": "gladys-integration-template-js",
+  "name": "gladys-wud",
   "version": "1.0.0",
   "private": true,
-  "description": "Official starter template to build an external integration for Gladys Assistant with the JavaScript SDK.",
+  "description": "Gladys Assistant integration for What's Up Docker (WUD): container updates as devices, scene triggers and a widget.",
   "type": "module",
   "main": "index.js",
   "scripts": {

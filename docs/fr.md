@@ -1,67 +1,171 @@
-# Template de démonstration
+# What's Up Docker
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+[What's Up Docker](https://getwud.github.io/wud/) (WUD) est un outil libre et
+auto-hébergé qui surveille vos conteneurs Docker et vous signale la sortie d'une
+nouvelle version de leur image. Cette intégration amène dans Gladys ce que WUD a
+trouvé : un appareil What's Up Docker (joignable, conteneurs surveillés, mises à
+jour disponibles, mises à jour majeures), un appareil par conteneur choisi (mise
+à jour disponible, version actuelle, nouvelle version), des scènes qui démarrent
+quand une mise à jour est trouvée ou appliquée, et un widget de tableau de bord
+qui liste les conteneurs à mettre à jour.
 
-## Ce que vous obtenez
+L'intégration est **en lecture seule** : elle ne met jamais un conteneur à jour
+et ne lance aucun « trigger » de WUD. La mise à jour reste votre décision, dans
+WUD ou à la main.
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+Testée contre un vrai WUD 9.5.0 et 8.4.0 (Docker, surveillant un démon Docker
+isolé) ; pas encore sur toutes les installations : vos retours sont les
+bienvenus sur [les issues](https://github.com/guim31/gladys-wud/issues).
 
-## Configuration
+## Ce qu'il faut
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+- Gladys Assistant 5.1.0 ou plus récent.
+- What's Up Docker 8 ou 9, joignable depuis la machine de Gladys (port 3000 par
+  défaut).
+- Avec WUD 9 (l'authentification y est obligatoire) : un utilisateur et son mot
+  de passe, ou mieux un jeton d'API. Avec WUD 8 : l'utilisateur et le mot de
+  passe si vous avez activé l'authentification, rien sinon.
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+WUD interroge lui-même les registres, à son rythme (toutes les heures par
+défaut) : Gladys lit seulement ce qu'il a trouvé, toutes les 5 minutes par
+défaut, et ne demande une vérification que si vous appuyez sur « Vérifier » ou
+qu'une scène le demande.
 
-## Actions
+## Mise en route
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+### 1. Créer un jeton d'API (WUD 9)
 
-## Scènes
+Dans WUD, ouvrez votre profil, puis **API tokens**, et créez un jeton. La
+portée **read** suffit pour suivre les mises à jour ; ajoutez **write** pour
+« Vérifier ». Vous pouvez aussi utiliser un utilisateur et son mot de passe.
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+### 2. Configurer l'intégration
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+Dans Gladys, ouvrez **Intégrations → What's Up Docker → Configuration** :
+
+- **Adresse de WUD** : l'adresse avec laquelle vous ouvrez WUD, par exemple
+  `http://192.168.1.2:3000`.
+- **Utilisateur** et **Mot de passe**, ou **Jeton d'API (WUD 9)** : le jeton
+  l'emporte si les deux sont remplis.
+- **Conteneurs en appareils** : les noms des conteneurs que vous voulez comme
+  appareils Gladys, séparés par des virgules (par exemple
+  `gladys, zigbee2mqtt`), ou `*` pour tous. Vide : seulement l'appareil What's
+  Up Docker. Les déclencheurs de scène et le widget couvrent de toute façon tous
+  les conteneurs.
+- **Intervalle de rafraîchissement** : 2, 5, 10 ou 15 minutes.
+- **Accepter les certificats auto-signés** : seulement pour une adresse
+  `https://` avec un certificat maison.
+- **Langue des noms** : la langue des noms de fonctionnalités et des messages
+  (français par défaut).
+
+Enregistrez, puis utilisez **Tester la connexion** : la réponse donne la version
+de WUD, le nombre de conteneurs et de mises à jour.
+
+### 3. Ajouter les appareils
+
+Ouvrez l'onglet **Découverte** de l'intégration et ajoutez les appareils
+voulus.
+
+## Les appareils
+
+**What's Up Docker** (le serveur) :
+
+- **Joignable** : 1 tant que WUD répond, 0 sinon.
+- **Conteneurs surveillés** : les conteneurs que WUD surveille.
+- **Mises à jour disponibles** : les conteneurs avec une image plus récente.
+- **Mises à jour majeures** : parmi elles, les majeures (par exemple 7.x →
+  8.x).
+- **Dernière mise à jour trouvée** : la date à laquelle l'intégration a vu une
+  nouvelle mise à jour pour la dernière fois (l'API de WUD ne donne pas de date
+  de « dernière vérification »).
+
+**Un appareil par conteneur choisi** (au nom du conteneur, son image comme
+modèle) :
+
+- **Mise à jour disponible** : 1 tant que WUD a une mise à jour pour lui.
+- **Version actuelle** : le tag qu'il utilise, par exemple `1.25.0` (et
+  l'empreinte courte pour un tag mobile comme `latest`).
+- **Nouvelle version** : le tag plus récent trouvé par WUD, ou « À jour ».
+
+Un conteneur est reconnu par son nom et son watcher WUD, pas par son
+identifiant Docker : un conteneur recréé pour sa mise à jour reste le même
+appareil.
 
 ## Tableau de bord
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+Le widget **Mises à jour conteneurs** affiche le nombre de mises à jour et de
+majeures, puis les conteneurs avec une mise à jour, majeures d'abord : nom,
+version actuelle → nouvelle et un badge (Majeure, Mineure, Correctif,
+Empreinte). Un appui montre l'image et, quand WUD la connaît, un lien vers les
+notes de version. S'il n'y en a aucune : « Tous les conteneurs sont à jour. ».
+Le bouton **Vérifier** demande à WUD de vérifier tous les conteneurs (WUD 9
+répond en arrière-plan, le widget suit dans la minute).
+
+## Scènes
+
+### Déclencheurs
+
+- **Mise à jour de conteneur disponible** : WUD a trouvé une nouvelle version
+  de l'image d'un conteneur. Annoncée une fois par version, pour tous les
+  conteneurs (ajoutés comme appareils ou non). Filtres : le conteneur, le type
+  de mise à jour (majeure, mineure, correctif, empreinte du même tag, autre).
+  Variables : conteneur, image, version actuelle, nouvelle version, type de
+  mise à jour.
+- **Mise à jour de conteneur appliquée** : un conteneur qui avait une mise à
+  jour tourne avec une nouvelle image, sans mise à jour en attente. Variables :
+  conteneur, image, version, version précédente.
+
+Une mise à jour mise en sourdine (« snooze » de WUD 9) n'est pas vue comme
+appliquée, et revient sans être annoncée deux fois.
+
+### Actions
+
+- **Vérifier les mises à jour des conteneurs** : WUD interroge à nouveau les
+  registres, pour un conteneur ou tous (champ vide, ou l'appareil What's Up
+  Docker). Ne met jamais un conteneur à jour. Sortie : le nombre de conteneurs
+  vérifiés. Demande la portée write avec un jeton d'API.
+
+### Idées de scènes
+
+- Chaque dimanche à 10 h, **Vérifier les mises à jour des conteneurs**, puis
+  envoyer un message avec `[Mises à jour disponibles]` si elle dépasse 0.
+- **Mise à jour de conteneur disponible**, type **Majeure** : s'envoyer un
+  message « `container` : `current_version` → `new_version`, lire les notes de
+  version avant de mettre à jour ».
+- **Mise à jour de conteneur appliquée** sur le conteneur `gladys` : envoyer un
+  message « Gladys mis à jour en `version` ».
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **« What's Up Docker ne répond pas »** : vérifiez l'adresse et le port (3000
+  par défaut), et que la machine de Gladys peut le joindre.
+- **« WUD demande un utilisateur et un mot de passe, ou un jeton d'API »** : WUD
+  9 exige toujours des identifiants ; renseignez l'utilisateur et le mot de
+  passe, ou un jeton.
+- **« utilisateur, mot de passe ou jeton refusé par WUD »** : recopiez le jeton,
+  ou vérifiez le mot de passe (un utilisateur OIDC ne peut pas utiliser
+  l'authentification basique : prenez un jeton).
+- **« vérification refusée : l'utilisateur ou le jeton WUD est en lecture
+  seule »** : donnez la portée write au jeton, ou utilisez un utilisateur au rôle
+  rw ou admin.
+- **« l'adresse redirige »** : saisissez l'adresse en `https://`.
+- **Un conteneur manque dans les appareils** : vérifiez son nom exact dans WUD
+  (le nom du conteneur, pas l'image), et que WUD le surveille (label
+  `wud.watch=true` quand `WUD_WATCHER_{name}_WATCHBYDEFAULT=false`).
+- **Aucune mise à jour pour un tag `latest`** : WUD ne suit l'empreinte d'un tag
+  mobile que si la surveillance des empreintes est activée (label
+  `wud.watch.digest=true`).
+
+## Limites
+
+- Lecture seule : ni mise à jour, ni redémarrage, ni « trigger » WUD.
+- La première lecture après l'installation note seulement les mises à jour
+  déjà en attente : elles ne sont pas annoncées, les suivantes le sont.
+- Une mise à jour est vue à la lecture suivante (5 minutes par défaut) après
+  que WUD l'a trouvée, ce qui dépend lui-même du rythme de WUD.
+- Seulement les conteneurs vus par WUD : un conteneur exclu de WUD n'existe pas
+  pour l'intégration.
+- Pour l'état des conteneurs (démarré, arrêté, CPU), voir les intégrations
+  Docker du store, comme
+  [gladys-docker](https://github.com/PhilippeMA/gladys-docker) ou
+  [gladys-portainer](https://github.com/LM1LC3N7/gladys-portainer).
