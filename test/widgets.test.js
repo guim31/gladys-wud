@@ -1,77 +1,83 @@
+// -----------------------------------------------------------------------------
+// The `pending_updates` widget: content within the core budget (checked with
+// the SDK validator), majors first, the "Check now" button.
+// -----------------------------------------------------------------------------
+
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateWidgetContent } from '@gladysassistant/integration-sdk';
-import { createFakeGladys } from '@gladysassistant/integration-sdk/testing';
-import { buildDiscoveredDevices } from '../src/devices/index.js';
-import { simulateLanSession } from '../src/devices/plug.js';
-import { DEMO_STATUS_WIDGET, WIDGETS, refreshWidgets } from '../src/widgets.js';
-import { normalizeConfig } from '../src/config.js';
+import { WIDGET_KEY } from '../src/hub.js';
+import { ACTIONS } from '../src/widgets.js';
+import { FakeWud, createWorld } from './helpers/world.js';
 
-const gladys = createFakeGladys();
-const config = normalizeConfig();
-const demoStatus = WIDGETS[DEMO_STATUS_WIDGET];
+async function world(t, options) {
+  const w = await createWorld(options);
+  t.after(() => w.app.stop());
+  return w;
+}
 
-// What the SDK passes to onWidgetGet, plus the config index.js adds.
-const getContent = (cfg = config) =>
-  demoStatus.get(gladys, { settings: {}, language: 'en', units: 'metric', config: cfg });
+const content = async (w, language = 'en') => {
+  const ack = await w.fake.widgetGet(WIDGET_KEY, { language });
+  assert.equal(ack.success, true, ack.error);
+  return ack.data.content ?? ack.data;
+};
 
-test('the demo_status content is rendered exactly as sent', async () => {
-  // [] = nothing the core would drop, truncate or trim to the content budget.
-  assert.deepEqual(validateWidgetContent(await getContent()), []);
-});
+const valid = (data) => {
+  assert.deepEqual(validateWidgetContent(data), []);
+};
 
-test('the degraded plug connection content is valid too', async () => {
-  simulateLanSession(false);
-  try {
-    const content = await getContent();
-    assert.deepEqual(validateWidgetContent(content), []);
-    const status = content.components.find((component) => component.type === 'status');
-    assert.ok(
-      status.items.some((item) => item.color === 'warning'),
-      'degraded shows a warning',
-    );
-  } finally {
-    simulateLanSession(true);
-  }
-});
-
-test('the live tiles reference features the integration publishes', async () => {
-  const featureIds = new Set(
-    buildDiscoveredDevices(gladys, config).flatMap((device) =>
-      device.features.map((feature) => feature.external_id),
-    ),
+test('the containers with an update, majors first, and the figures', async (t) => {
+  const w = await world(t);
+  const data = await content(w);
+  valid(data);
+  const [updates, major, list, button] = data.components;
+  assert.equal(updates.value, 3);
+  assert.equal(major.value, 1);
+  assert.deepEqual(
+    list.items.map((item) => [item.title, item.subtitle, item.badge.text]),
+    [
+      ['redis', '7.0.0 → 8.10.2', 'Major'],
+      ['alpine', '3.18 → 3.24', 'Minor'],
+      ['nginx', '1.25.0 → 1.31.8', 'Minor'],
+    ],
   );
-  const liveTiles = (await getContent()).components.filter((c) => c.device_feature);
-  assert.ok(liveTiles.length > 0, 'the template demonstrates a device-bound tile');
-  for (const tile of liveTiles) {
-    assert.ok(featureIds.has(tile.device_feature), `unknown feature ${tile.device_feature}`);
+  assert.equal(button.action.key, ACTIONS.CHECK_ALL);
+  const french = await content(w, 'fr');
+  assert.equal(french.components[2].items[0].badge.text, 'Majeure');
+});
+
+test('every container up to date, WUD down, not configured', async (t) => {
+  const wud = new FakeWud();
+  for (const name of ['alpine', 'nginx', 'redis']) {
+    wud.apply(name);
   }
+  const w = await world(t, { wud });
+  assert.equal((await content(w)).components[2].text, 'Every container is up to date.');
+  wud.failure = { code: 'ECONNREFUSED' };
+  await w.hub.pollNow();
+  const down = await content(w);
+  valid(down);
+  assert.match(down.components[2].text, /does not answer/);
+  const empty = await world(t, { config: {} });
+  assert.match((await content(empty)).components[0].text, /Enter the address/);
 });
 
-test('every button action of the content is handled and answers a short toast', async () => {
-  const buttons = (await getContent()).components.filter((c) => c.type === 'button' && c.action);
-  assert.ok(buttons.length > 0, 'the template demonstrates a widget action');
-  for (const { action } of buttons) {
-    const message = await demoStatus.action(gladys, {
-      actionKey: action.key,
-      params: action.params ?? {},
-      settings: {},
-      config,
-    });
-    assert.ok(message.en, 'the toast carries at least the mandatory `en` text');
-    assert.ok(message.en.length <= 200, 'toasts are capped at 200 characters');
+test('more than 8 updates: 8 rows and a line for the rest, within the budget', async (t) => {
+  const wud = new FakeWud();
+  const base = wud.get('nginx');
+  for (let i = 0; i < 10; i += 1) {
+    wud.containers.push({ ...structuredClone(base), name: `web${i}`, displayName: `web${i}` });
   }
+  const w = await world(t, { wud });
+  const data = await content(w);
+  valid(data);
+  assert.equal(data.components[2].items.length, 8);
+  assert.equal(data.components[3].text, 'And 5 more.');
 });
 
-test('an unknown widget action fails, so the user sees the error', async () => {
-  await assert.rejects(
-    demoStatus.action(gladys, { actionKey: 'unknown', params: {}, settings: {}, config }),
-    /Unknown widget action/,
-  );
-});
-
-test('refreshWidgets nudges every widget', () => {
-  const fresh = createFakeGladys();
-  refreshWidgets(fresh);
-  assert.deepEqual(fresh.fake.widgetRefreshes, Object.keys(WIDGETS));
+test('"Check now" asks WUD to check every container', async (t) => {
+  const w = await world(t);
+  const ack = await w.fake.widgetAction(WIDGET_KEY, ACTIONS.CHECK_ALL);
+  assert.equal(ack.success, true, ack.error);
+  assert.ok(w.wud.calls.includes('POST /api/containers/watch'));
 });

@@ -31,16 +31,22 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
+index.js                          SDK wiring only: src/app.js registers the handlers before connect()
+src/app.js                        every SDK handler -> the hub (also used by the tests)
+src/hub.js                        reading timer, what changed per container -> scene events, states, views
+src/devices.js                    devices (WUD server + chosen containers): identity, features, names (4 languages), values
+src/wud/client.js                 REST API of WUD (Bearer token or Basic), container normalization, errors by kind
+src/wud/http.js                   node:http/https request (self-signed certificates on request)
 src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/widgets.js                    dashboard widget `pending_updates` (manifest `widgets`)
+src/texts.js                      connection, error, report and action texts (4 languages)
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
+src/store.js                      /data/wud-state.json (what was last seen of each container)
+src/problems.js                   one log line when a repeated failure starts, one when it ends
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (en and fr mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+                                  and helpers/fakeWud.js (shapes of test/fixtures/wud, real WUD 9.5.0 / 8.4.0)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +76,9 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German and Spanish: action
+  messages, widget texts, feature names, manifest texts, and
+  `docs/{en,fr,de,es}.md`, kept in sync (`test/i18n.test.js`).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -197,6 +204,54 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 - Les filtres de scène ne font qu'égalité et appartenance : un seuil reste le travail d'un capteur.
 - **Les clés de widgets, de déclencheurs et d'actions sont figées une fois publiées.**
 - `gladys_version` `>=5.1.0` dès qu'il y a widgets, déclencheurs ou actions de scène.
+
+## What's Up Docker (propre à ce dépôt)
+
+- **Lecture seule** : l'intégration ne met jamais un conteneur à jour et ne lance aucun trigger de WUD. La seule
+  écriture est « Vérifier » : `POST /api/containers/watch?async=true` (tous) ou `POST /api/containers/<id>/watch`
+  (un seul).
+- **WUD 9 rend l'authentification obligatoire** (sans `WUD_AUTH_ADMIN_USER`/`PASSWORD` il refuse de démarrer).
+  Deux voies : Basic (utilisateur/mot de passe, impossible pour un compte OIDC) ou **jeton d'API** (profil → API
+  tokens, en-tête `Authorization: Bearer`, portées `read` et `write`). Un 403 sur un POST = jeton ou utilisateur en
+  lecture seule (`READ_ONLY`), sur un GET = accès refusé.
+- `POST /api/containers/watch` : WUD 9 accepte `?async=true` et répond 202 aussitôt ; WUD 8 ignore le paramètre et
+  ne répond qu'une fois toutes les vérifications faites (renvoie `[]` en 8.4.0). Un time-out n'y est donc pas un
+  échec.
+- **Identité d'un conteneur = watcher + nom** (`local.nginx`) : l'id Docker change à chaque recréation, donc à
+  chaque mise à jour. Un nom de watcher n'a pas de point (variable d'environnement), d'où le séparateur.
+- **Pas de date de « dernière vérification »** dans l'API (ni 8.4 ni 9.5) : l'appareil WUD publie à la place la date
+  de la dernière mise à jour trouvée par l'intégration.
+- `updateAvailable` est **faux pendant un snooze ou un cooldown** (WUD 9) et tant que WUD n'a pas fini sa première
+  vérification après un redémarrage. D'où la règle des déclencheurs : « appliquée » = une mise à jour annoncée **et**
+  une autre image (`tag|image.id`) **et** plus de mise à jour ; « disponible » = une version distante différente de
+  la dernière annoncée (gardée dans `/data`). Un snooze ne vaut donc ni « appliquée » ni nouvelle annonce.
+- Un conteneur **snoozé / en cooldown** (`isSnoozed`, `isCoolingDown`) ou **en erreur** (`error.message`, par exemple un
+  429 du registre juste après sa recréation : WUD l'insère alors sans mise à jour) ne fait rien conclure : son entrée
+  de `/data` est gardée telle quelle jusqu'à une lecture propre (relecture indépendante du 23/10).
+- Changer d'adresse WUD repart de zéro (les clés `local.<nom>` se recoupent d'un hôte à l'autre). Une première liste
+  vide (WUD qui redémarre sans store) ne compte pas comme première lecture.
+- `seenAt` n'est rafraîchi qu'une fois par jour, sinon `/data` serait réécrit à chaque lecture.
+- `watchAll` (WUD 8 synchrone) : délai client de 20 s, sous les 30 s du bouton de widget ; seul un time-out **après
+  connexion** (`ERESPONSETIMEOUT`, `src/wud/http.js`) vaut « en cours », un serveur muet reste « ne répond pas ».
+- « Vérifier » un conteneur : son id peut avoir changé depuis la dernière lecture (recréé) ; sur 404, relire et
+  réessayer une fois.
+- La première lecture après l'installation (fichier `/data` absent) n'annonce rien. Un conteneur absent de la liste
+  est gardé 7 jours dans `/data` : supprimé puis recréé (docker compose), il garde son historique.
+- `updateKind.semverDiff` vaut `major`, `minor`, `patch`, `prerelease` ou `unknown` ; `kind: digest` pour un tag
+  mobile surveillé par empreinte (label `wud.watch.digest=true`). `prerelease`/`unknown` → `other`.
+- Un conteneur dont le registre est inconnu de WUD porte `error.message` (« Unsupported Registry unknown ») et
+  `updateAvailable: false`.
+
+## Vérifié sur un vrai WUD
+
+Banc du 23/10/2026 : `docker:dind` isolé (réseau `gladys-test-wud`, jamais le socket de l'hôte) avec `nginx:1.25.0`,
+`alpine:3.18`, `redis:7.0.0`, `busybox:latest` et une image d'un registre inconnu ; `ghcr.io/getwud/wud:latest`
+(9.5.0, utilisateur admin + jeton) et `ghcr.io/getwud/wud:8` (8.4.0, sans authentification) le surveillent par
+`WUD_WATCHER_LOCAL_HOST`/`PORT`. Les réponses sont dans `test/fixtures/wud/`. Vérifié de bout en bout dans l'image verrouillée (`--read-only`,
+`--cap-drop ALL`, 256 Mo) contre ces WUD : Basic, jeton read (vérification refusée proprement), jeton write, WUD 8,
+mauvais mot de passe, WUD absent ; puis alpine recréé en 3.24 et un memcached 1.6.0 ajouté pendant l'arrêt : au
+redémarrage, `update_applied` et `update_available` partent une fois chacun. Le registre miroir de dind est
+`mirror.gcr.io` (évite le 429 de Docker Hub).
 
 ## Store
 

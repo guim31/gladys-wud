@@ -30,6 +30,14 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+The integration stores in Gladys the address of What's Up Docker and its
+credentials (user and password, or API token: secret fields, never logged).
+Under `/data` it keeps only `wud-state.json`: the names, versions and image ids
+of the containers WUD watches, and the updates already announced. It talks to
+What's Up Docker only, on the local network, and only reads, except "Check now"
+(a check of the registries by WUD, never an update of a container). It never
+connects to Docker itself.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+What's Up Docker, and the registries it queries.

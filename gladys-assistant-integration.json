@@ -1,177 +1,562 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "What's Up Docker",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Docker container updates found by What's Up Docker (WUD): devices, scenes and widget.",
+    "fr": "Mises à jour Docker trouvées par What's Up Docker (WUD) : appareils, scènes et widget.",
+    "de": "Von What's Up Docker (WUD) gefundene Docker-Container-Updates: Geräte, Szenen und Widget.",
+    "es": "Actualizaciones de contenedores Docker halladas por What's Up Docker (WUD): dispositivos, escenas."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-wud:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-wud/main/cover.png",
+  "categories": ["network"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your What's Up Docker",
+        "fr": "Votre What's Up Docker",
+        "de": "Dein What's Up Docker",
+        "es": "Su What's Up Docker"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Enter the address of WUD (port 3000 by default) and its credentials: a user and password, or an API token (WUD 9, profile → API tokens; the write scope is only needed for \"Check now\"). The integration never updates a container.",
+        "fr": "Saisissez l'adresse de WUD (port 3000 par défaut) et ses identifiants : un utilisateur et un mot de passe, ou un jeton d'API (WUD 9, profil → API tokens ; l'écriture ne sert qu'à « Vérifier »). L'intégration ne met jamais un conteneur à jour.",
+        "de": "Gib die Adresse von WUD (standardmäßig Port 3000) und die Zugangsdaten ein: Benutzer und Passwort oder ein API-Token (WUD 9, Profil → API tokens; Schreibrechte braucht nur „Jetzt prüfen“). Die Integration aktualisiert nie einen Container.",
+        "es": "Introduzca la dirección de WUD (puerto 3000 por defecto) y sus credenciales: usuario y contraseña, o un token de API (WUD 9, perfil → API tokens; la escritura solo sirve para «Comprobar»). La integración nunca actualiza un contenedor."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/guim31/gladys-wud/blob/main/docs/en.md",
+          "label": {
+            "en": "Setup guide",
+            "fr": "Guide d'installation",
+            "de": "Installationsanleitung",
+            "es": "Guía de instalación"
+          }
+        },
+        {
+          "url": "https://getwud.github.io/wud/",
+          "label": {
+            "en": "WUD documentation",
+            "fr": "Documentation de WUD",
+            "de": "Dokumentation von WUD",
+            "es": "Documentación de WUD"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "url",
+      "type": "string",
+      "label": {
+        "en": "WUD address",
+        "fr": "Adresse de WUD",
+        "de": "Adresse von WUD",
+        "es": "Dirección de WUD"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
       "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+        "en": "The address you open WUD with, port included (3000 by default).",
+        "fr": "L'adresse avec laquelle vous ouvrez WUD, port compris (3000 par défaut).",
+        "de": "Die Adresse, mit der du WUD öffnest, mit Port (standardmäßig 3000).",
+        "es": "La dirección con la que abre WUD, puerto incluido (3000 por defecto)."
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "placeholder": {
+        "en": "e.g. http://192.168.1.2:3000",
+        "fr": "ex. http://192.168.1.2:3000",
+        "de": "z. B. http://192.168.1.2:3000",
+        "es": "p. ej. http://192.168.1.2:3000"
+      },
       "required": false,
-      "default": "celsius",
+      "default": ""
+    },
+    {
+      "key": "username",
+      "type": "string",
+      "label": {
+        "en": "User",
+        "fr": "Utilisateur",
+        "de": "Benutzer",
+        "es": "Usuario"
+      },
+      "description": {
+        "en": "A WUD user (basic authentication). Leave empty with an API token, or with a WUD 8 without authentication.",
+        "fr": "Un utilisateur de WUD (authentification basique). Laissez vide avec un jeton d'API, ou avec un WUD 8 sans authentification.",
+        "de": "Ein WUD-Benutzer (Basic-Authentifizierung). Leer lassen bei einem API-Token oder bei WUD 8 ohne Authentifizierung.",
+        "es": "Un usuario de WUD (autenticación básica). Déjelo vacío con un token de API, o con un WUD 8 sin autenticación."
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "password",
+      "type": "secret",
+      "label": {
+        "en": "Password",
+        "fr": "Mot de passe",
+        "de": "Passwort",
+        "es": "Contraseña"
+      },
+      "required": false
+    },
+    {
+      "key": "api_token",
+      "type": "secret",
+      "label": {
+        "en": "API token (WUD 9)",
+        "fr": "Jeton d'API (WUD 9)",
+        "de": "API-Token (WUD 9)",
+        "es": "Token de API (WUD 9)"
+      },
+      "description": {
+        "en": "Used instead of the user and password when filled in.",
+        "fr": "Utilisé à la place de l'utilisateur et du mot de passe s'il est rempli.",
+        "de": "Wird statt Benutzer und Passwort verwendet, wenn ausgefüllt.",
+        "es": "Se usa en lugar del usuario y la contraseña si se rellena."
+      },
+      "required": false
+    },
+    {
+      "key": "containers",
+      "type": "string",
+      "label": {
+        "en": "Containers as devices",
+        "fr": "Conteneurs en appareils",
+        "de": "Container als Geräte",
+        "es": "Contenedores como dispositivos"
+      },
+      "description": {
+        "en": "Names of the containers to propose as devices, separated by commas; * for all. The scene triggers and the widget cover every container anyway.",
+        "fr": "Noms des conteneurs à proposer comme appareils, séparés par des virgules ; * pour tous. Les déclencheurs et le widget couvrent de toute façon tous les conteneurs.",
+        "de": "Namen der Container, die als Geräte angeboten werden, durch Kommas getrennt; * für alle. Die Auslöser und das Widget decken ohnehin alle Container ab.",
+        "es": "Nombres de los contenedores que se proponen como dispositivos, separados por comas; * para todos. Los disparadores y el widget cubren todos los contenedores igualmente."
+      },
+      "placeholder": {
+        "en": "e.g. gladys, zigbee2mqtt",
+        "fr": "ex. gladys, zigbee2mqtt",
+        "de": "z. B. gladys, zigbee2mqtt",
+        "es": "p. ej. gladys, zigbee2mqtt"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "poll_interval",
+      "type": "select",
+      "label": {
+        "en": "Refresh interval",
+        "fr": "Intervalle de rafraîchissement",
+        "de": "Aktualisierungsintervall",
+        "es": "Intervalo de actualización"
+      },
+      "description": {
+        "en": "How often the integration reads what WUD found. WUD itself checks the registries on its own schedule (every hour by default).",
+        "fr": "Fréquence à laquelle l'intégration lit ce que WUD a trouvé. WUD interroge lui-même les registres à son rythme (toutes les heures par défaut).",
+        "de": "Wie oft die Integration liest, was WUD gefunden hat. WUD fragt die Registries selbst nach eigenem Zeitplan ab (standardmäßig stündlich).",
+        "es": "Con qué frecuencia la integración lee lo que WUD ha encontrado. WUD consulta los registros según su propio calendario (cada hora por defecto)."
+      },
+      "required": false,
+      "default": "300",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "120",
+          "label": {
+            "en": "2 minutes",
+            "fr": "2 minutes",
+            "de": "2 Minuten",
+            "es": "2 minutos"
+          }
+        },
+        {
+          "value": "300",
+          "label": {
+            "en": "5 minutes",
+            "fr": "5 minutes",
+            "de": "5 Minuten",
+            "es": "5 minutos"
+          }
+        },
+        {
+          "value": "600",
+          "label": {
+            "en": "10 minutes",
+            "fr": "10 minutes",
+            "de": "10 Minuten",
+            "es": "10 minutos"
+          }
+        },
+        {
+          "value": "900",
+          "label": {
+            "en": "15 minutes",
+            "fr": "15 minutes",
+            "de": "15 Minuten",
+            "es": "15 minutos"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "allow_self_signed",
+      "type": "boolean",
+      "label": {
+        "en": "Accept self-signed certificates",
+        "fr": "Accepter les certificats auto-signés",
+        "de": "Selbstsignierte Zertifikate akzeptieren",
+        "es": "Aceptar certificados autofirmados"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Only for an https:// address with a home-made certificate.",
+        "fr": "Seulement pour une adresse https:// avec un certificat maison.",
+        "de": "Nur für eine https://-Adresse mit eigenem Zertifikat.",
+        "es": "Solo para una dirección https:// con un certificado propio."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": false
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the names",
+        "fr": "Langue des noms",
+        "de": "Sprache der Namen",
+        "es": "Idioma de los nombres"
+      },
+      "description": {
+        "en": "Language of the feature names and of the messages sent by the integration.",
+        "fr": "Langue des noms de fonctionnalités et des messages envoyés par l'intégration.",
+        "de": "Sprache der Funktionsnamen und der Meldungen der Integration.",
+        "es": "Idioma de los nombres de funciones y de los mensajes de la integración."
+      },
+      "required": false,
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
       "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "update_available",
+      "label": {
+        "en": "Container update available",
+        "fr": "Mise à jour de conteneur disponible",
+        "de": "Container-Update verfügbar",
+        "es": "Actualización de contenedor disponible"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "WUD found a new version of the image of a container (announced once per version).",
+        "fr": "WUD a trouvé une nouvelle version de l'image d'un conteneur (annoncée une fois par version).",
+        "de": "WUD hat eine neue Version des Images eines Containers gefunden (einmal pro Version gemeldet).",
+        "es": "WUD ha encontrado una nueva versión de la imagen de un contenedor (anunciada una vez por versión)."
       },
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "label": {
+            "en": "Container",
+            "fr": "Conteneur",
+            "de": "Container",
+            "es": "Contenedor"
+          }
         },
         {
-          "key": "target",
+          "key": "kind",
           "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "label": {
+            "en": "Kind of update",
+            "fr": "Type de mise à jour",
+            "de": "Art des Updates",
+            "es": "Tipo de actualización"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "major",
+              "label": {
+                "en": "Major",
+                "fr": "Majeure",
+                "de": "Major",
+                "es": "Mayor"
+              }
+            },
+            {
+              "value": "minor",
+              "label": {
+                "en": "Minor",
+                "fr": "Mineure",
+                "de": "Minor",
+                "es": "Menor"
+              }
+            },
+            {
+              "value": "patch",
+              "label": {
+                "en": "Patch",
+                "fr": "Correctif",
+                "de": "Patch",
+                "es": "Parche"
+              }
+            },
+            {
+              "value": "digest",
+              "label": {
+                "en": "Digest (same tag)",
+                "fr": "Empreinte (même tag)",
+                "de": "Digest (gleicher Tag)",
+                "es": "Digest (misma etiqueta)"
+              }
+            },
+            {
+              "value": "other",
+              "label": {
+                "en": "Other",
+                "fr": "Autre",
+                "de": "Andere",
+                "es": "Otra"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "container",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Container",
+            "fr": "Conteneur",
+            "de": "Container",
+            "es": "Contenedor"
+          }
+        },
+        {
+          "key": "image",
+          "type": "string",
+          "label": {
+            "en": "Image",
+            "fr": "Image",
+            "de": "Image",
+            "es": "Imagen"
+          }
+        },
+        {
+          "key": "current_version",
+          "type": "string",
+          "label": {
+            "en": "Current version",
+            "fr": "Version actuelle",
+            "de": "Aktuelle Version",
+            "es": "Versión actual"
+          }
+        },
+        {
+          "key": "new_version",
+          "type": "string",
+          "label": {
+            "en": "New version",
+            "fr": "Nouvelle version",
+            "de": "Neue Version",
+            "es": "Nueva versión"
+          }
+        },
+        {
+          "key": "kind",
+          "type": "string",
+          "label": {
+            "en": "Kind of update",
+            "fr": "Type de mise à jour",
+            "de": "Art des Updates",
+            "es": "Tipo de actualización"
+          }
+        }
+      ]
+    },
+    {
+      "key": "update_applied",
+      "label": {
+        "en": "Container update applied",
+        "fr": "Mise à jour de conteneur appliquée",
+        "de": "Container-Update angewendet",
+        "es": "Actualización de contenedor aplicada"
+      },
+      "description": {
+        "en": "A container that had an update now runs a new image, with no update left.",
+        "fr": "Un conteneur qui avait une mise à jour tourne avec une nouvelle image, sans mise à jour en attente.",
+        "de": "Ein Container mit Update läuft jetzt mit einem neuen Image, ohne ausstehendes Update.",
+        "es": "Un contenedor que tenía una actualización usa una nueva imagen, sin actualización pendiente."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Container",
+            "fr": "Conteneur",
+            "de": "Container",
+            "es": "Contenedor"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "container",
+          "type": "string",
+          "label": {
+            "en": "Container",
+            "fr": "Conteneur",
+            "de": "Container",
+            "es": "Contenedor"
+          }
+        },
+        {
+          "key": "image",
+          "type": "string",
+          "label": {
+            "en": "Image",
+            "fr": "Image",
+            "de": "Image",
+            "es": "Imagen"
+          }
+        },
+        {
+          "key": "version",
+          "type": "string",
+          "label": {
+            "en": "Version",
+            "fr": "Version",
+            "de": "Version",
+            "es": "Versión"
+          }
+        },
+        {
+          "key": "previous_version",
+          "type": "string",
+          "label": {
+            "en": "Previous version",
+            "fr": "Version précédente",
+            "de": "Vorherige Version",
+            "es": "Versión anterior"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "check_now",
+      "label": {
+        "en": "Check for container updates",
+        "fr": "Vérifier les mises à jour des conteneurs",
+        "de": "Container-Updates prüfen",
+        "es": "Comprobar actualizaciones de contenedores"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "WUD asks the registries again now, for one container or all (empty field or the WUD device). Never updates a container.",
+        "fr": "WUD interroge à nouveau les registres, pour un conteneur ou tous (champ vide ou appareil WUD). Ne met jamais un conteneur à jour.",
+        "de": "WUD fragt die Registries jetzt erneut ab, für einen oder alle Container (leeres Feld oder WUD-Gerät). Aktualisiert nie einen Container.",
+        "es": "WUD vuelve a consultar los registros, para un contenedor o todos (campo vacío o dispositivo WUD). Nunca actualiza un contenedor."
+      },
+      "timeout_seconds": 90,
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "label": {
+            "en": "Container",
+            "fr": "Conteneur",
+            "de": "Container",
+            "es": "Contenedor"
+          }
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "count",
+          "type": "number",
+          "label": {
+            "en": "Containers checked",
+            "fr": "Conteneurs vérifiés",
+            "de": "Geprüfte Container",
+            "es": "Contenedores comprobados"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "pending_updates",
+      "label": {
+        "en": "Container updates",
+        "fr": "Mises à jour conteneurs",
+        "de": "Container-Updates",
+        "es": "Actualizaciones"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Containers with an update, majors first, and a button to check now.",
+        "fr": "Les conteneurs avec une mise à jour, majeures d'abord, et un bouton pour vérifier.",
+        "de": "Container mit Update, Major zuerst, und eine Schaltfläche zum Prüfen.",
+        "es": "Contenedores con actualización, mayores primero, y un botón para comprobar."
+      },
+      "icon": "download",
+      "action_timeout_seconds": 30
     }
   ]
 }
