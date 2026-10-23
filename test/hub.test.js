@@ -378,3 +378,64 @@ test('a container appears in the Discovery tab when the configuration names it',
     ["What's Up Docker", 'alpine'],
   );
 });
+
+// --- Review fixes ----------------------------------------------------------------------
+
+test('snoozed, then recreated on another image: no "applied", no second announcement', async (t) => {
+  const w = await world(t);
+  w.wud.snooze('redis');
+  w.wud.apply('redis', '7.2.0');
+  w.wud.get('redis').isSnoozed = true;
+  await step(w);
+  w.wud.get('redis').isSnoozed = false;
+  w.wud.offer('redis', '8.10.2', 'major');
+  await step(w);
+  assert.equal(w.fake.sceneEvents.length, 0);
+});
+
+test('a check that failed after a recreation concludes nothing until a clean read', async (t) => {
+  const w = await world(t);
+  w.wud.apply('redis', '7.2.0');
+  w.wud.get('redis').error = { message: 'Registry error 429' };
+  await step(w);
+  assert.equal(w.fake.sceneEvents.length, 0);
+  delete w.wud.get('redis').error;
+  w.wud.offer('redis', '8.10.2', 'major');
+  await step(w);
+  assert.equal(w.fake.sceneEvents.length, 0, '8.10.2 was already announced');
+});
+
+test('/data is not written at every read', async (t) => {
+  const w = await world(t);
+  const save = t.mock.method(w.hub.store, 'save');
+  await step(w);
+  await step(w);
+  assert.equal(save.mock.callCount(), 0);
+});
+
+test('another WUD address starts afresh: nothing announced from the old history', async (t) => {
+  const w = await world(t);
+  const other = new FakeWud();
+  other.apply('nginx', '1.31.8');
+  w.wud.containers = other.containers;
+  await w.fake.configUpdated({ ...CONFIG, url: 'http://192.0.2.11:3000' });
+  assert.equal(w.fake.sceneEvents.length, 0);
+});
+
+test('a first read with an empty list does not count as the first read', async (t) => {
+  const wud = new FakeWud();
+  const containers = wud.containers;
+  wud.containers = [];
+  const w = await world(t, { wud });
+  wud.containers = containers;
+  await step(w);
+  assert.equal(w.fake.sceneEvents.length, 0);
+});
+
+test('"Check now" on a container recreated since the last read uses its new id', async (t) => {
+  const w = await world(t);
+  w.wud.apply('nginx', '1.31.8');
+  const ack = await w.fake.sceneAction('check_now', { device: deviceId(w.gladys, 'nginx') });
+  assert.equal(ack.success, true, ack.error);
+  assert.ok(w.wud.calls.includes(`POST /api/containers/${w.wud.get('nginx').id}/watch`));
+});

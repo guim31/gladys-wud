@@ -118,7 +118,43 @@ test('errors: refused, missing, read-only check, not WUD, redirect, down', async
 
 test('"check every container" on WUD 8 (answers once done): a time-out is not a failure', async () => {
   const slow = async () => {
-    throw Object.assign(new Error('Timed out'), { code: 'ETIMEDOUT' });
+    throw Object.assign(new Error('Timed out'), { code: 'ERESPONSETIMEOUT' });
   };
   await new WudClient({ url: 'http://192.0.2.10:3000', request: slow }).watchAll();
+});
+
+test('a moving tag watched by digest always shows its digest; a rebuilt tag shows its date', () => {
+  const watched = normalizeContainer({
+    name: 'app',
+    image: { tag: { value: 'latest' }, digest: { watch: true, value: 'sha256:0123456789abcdef' } },
+    updateAvailable: false,
+    updateKind: { kind: 'unknown' },
+  });
+  assert.equal(watched.current, 'latest (0123456789ab)');
+  const rebuilt = normalizeContainer({
+    name: 'app',
+    image: { tag: { value: '1.0' } },
+    result: { tag: '1.0', created: '2026-10-20T08:00:00.000Z' },
+    updateAvailable: true,
+    updateKind: { kind: 'unknown' },
+  });
+  assert.equal(rebuilt.latest, '1.0 (2026-10-20)');
+  assert.equal(rebuilt.kind, 'other');
+});
+
+test('a token pasted with its "Bearer" prefix, and a server that never answers', async () => {
+  const seen = [];
+  const request = async (url, { headers }) => {
+    seen.push(headers.authorization);
+    return { status: 200, headers: {}, body: '[]' };
+  };
+  await new WudClient({ url: 'http://192.0.2.10:3000', token: 'Bearer abc', request }).containers();
+  assert.deepEqual(seen, ['Bearer abc']);
+  const silent = async () => {
+    throw Object.assign(new Error('Timed out'), { code: 'ETIMEDOUT' });
+  };
+  await assert.rejects(
+    new WudClient({ url: 'http://192.0.2.10:3000', request: silent }).watchAll(),
+    (err) => err.kind === ERROR_KINDS.UNREACHABLE,
+  );
 });

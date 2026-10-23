@@ -93,8 +93,9 @@ Gerät.
 
 Das Widget **Container-Updates** zeigt die Zahl der Updates und der
 Major-Updates, dann die Container mit Update, Major zuerst: Name, aktuelle →
-neue Version und ein Abzeichen (Major, Minor, Patch, Digest). Ein Tippen zeigt
-das Image und, wenn WUD sie kennt, einen Link zu den Versionshinweisen. Gibt es
+neue Version und ein Abzeichen (Major, Minor, Patch, Digest, Update). Ein Tippen zeigt
+das Image und einen Link „Mehr erfahren“ (die Seite des Images oder die
+Versionshinweise, wenn WUD dafür eine Link-Vorlage hat). Gibt es
 keines: „Alle Container sind aktuell.“. Die Schaltfläche **Jetzt prüfen** lässt
 WUD alle Container prüfen (WUD 9 antwortet im Hintergrund, das Widget folgt
 innerhalb einer Minute).
@@ -124,7 +125,8 @@ kommt zurück, ohne doppelt gemeldet zu werden.
 
 ### Szenen-Ideen
 
-- Jeden Sonntag um 10:00 **Container-Updates prüfen** und dann eine Nachricht
+- Jeden Sonntag um 10:00 **Container-Updates prüfen**, 2 Minuten warten (WUD
+  prüft im Hintergrund) und dann eine Nachricht
   mit `[Verfügbare Updates]` senden, wenn der Wert über 0 liegt.
 - **Container-Update verfügbar**, Art **Major**: schick dir eine Nachricht
   „`container`: `current_version` → `new_version`, lies die Versionshinweise vor

@@ -52,6 +52,7 @@ export const HUB_TIMINGS = {
   forgetMs: 7 * 24 * 3600_000,
 };
 
+const DAY_MS = 24 * 3600_000;
 const MAX_STATES_PER_REQUEST = 100;
 const MAX_STATES_PER_MINUTE = 250;
 const MAX_TRANSPORTS_PER_REQUEST = 100;
@@ -120,9 +121,14 @@ export class WudHub {
     const saved = await this.store.load();
     const containers = saved?.containers;
     this.saved = {
+      url: typeof saved?.url === 'string' ? saved.url : null,
       initialized: saved?.initialized === true,
       lastFound: Number.isFinite(saved?.lastFound) ? saved.lastFound : 0,
-      containers: containers && typeof containers === 'object' ? containers : {},
+      containers: Object.fromEntries(
+        Object.entries(containers && typeof containers === 'object' ? containers : {}).filter(
+          ([, entry]) => entry && typeof entry === 'object',
+        ),
+      ),
     };
     this.savedKey = JSON.stringify(this.saved);
     await this.reconfigure(config);
@@ -351,6 +357,10 @@ export class WudHub {
     this.error = null;
     this.readAt = this.now();
 
+    if (this.saved.url !== this.config.url) {
+      // Another WUD: what was seen of the previous one means nothing here.
+      this.saved = { url: this.config.url, initialized: false, lastFound: 0, containers: {} };
+    }
     const next = new Map();
     for (const container of list) {
       next.set(containerKey(container), container);
@@ -359,13 +369,18 @@ export class WudHub {
     for (const [key, container] of next) {
       await this.update(key, container, announce);
     }
+    if (client !== this.client) {
+      return; // reconfigured while the events were sent
+    }
     const now = this.now();
     for (const [key, entry] of Object.entries(this.saved.containers)) {
       if (!next.has(key) && now - (entry.seenAt ?? 0) > this.timings.forgetMs) {
         delete this.saved.containers[key];
       }
     }
-    this.saved.initialized = true;
+    // An empty list (WUD restarting without its store) does not count as the
+    // first read: the next one would announce every pending update at once.
+    this.saved.initialized ||= next.size > 0;
     this.containers = next;
     this.save();
 
@@ -392,11 +407,20 @@ export class WudHub {
    */
   async update(key, container, announce) {
     const before = this.saved.containers[key];
+    // Refreshed once a day only: /data is written when something changed.
+    const now = this.now();
+    const seenAt = before && now - (before.seenAt ?? 0) < DAY_MS ? before.seenAt : now;
+    if (before && (container.hidden || container.error)) {
+      // A snoozed update, or a check that failed (registry down, rate limit):
+      // nothing to conclude, decided at the next clean read.
+      this.saved.containers[key] = { ...before, seenAt };
+      return;
+    }
     const entry = {
       signature: container.signature,
       current: container.current,
       announced: before?.announced ?? null,
-      seenAt: this.now(),
+      seenAt,
     };
     const events = [];
     if (before && before.signature !== container.signature) {
@@ -435,7 +459,7 @@ export class WudHub {
       if (!(await this.fireContainer(trigger, key, container, extra))) {
         // Gladys refused the event (it is restarting): announce it again later.
         if (before) {
-          this.saved.containers[key] = { ...before, seenAt: entry.seenAt };
+          this.saved.containers[key] = { ...before, seenAt };
         } else {
           delete this.saved.containers[key];
         }
@@ -679,7 +703,20 @@ export class WudHub {
     try {
       await this.client.watch(container.id);
     } catch (err) {
-      throw this.commandError(err, true);
+      if (err.status !== 404) {
+        throw this.commandError(err, true);
+      }
+      // Recreated since the last read: a new Docker id.
+      await this.pollNow({ fresh: true });
+      const fresh = this.containers.get(key);
+      if (!fresh) {
+        throw this.commandError(err, true);
+      }
+      try {
+        await this.client.watch(fresh.id);
+      } catch (retry) {
+        throw this.commandError(retry, true);
+      }
     }
     logger.info(`Check of ${container.name} requested`);
     await this.pollNow({ fresh: true });

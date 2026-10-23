@@ -64,9 +64,17 @@ export function httpRequest(
         response.on('error', reject);
       },
     );
+    // A time-out once connected (the server is working on the answer) is told
+    // apart from a server that never answered.
+    let connected = false;
+    request.on('socket', (socket) => {
+      socket.once(isHttps ? 'secureConnect' : 'connect', () => {
+        connected = true;
+      });
+    });
     request.on('timeout', () => {
       const error = new Error(`Timed out after ${timeoutMs} ms`);
-      error.code = 'ETIMEDOUT';
+      error.code = connected ? 'ERESPONSETIMEOUT' : 'ETIMEDOUT';
       request.destroy(error);
     });
     request.on('error', reject);

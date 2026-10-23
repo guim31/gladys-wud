@@ -97,9 +97,10 @@ mismo dispositivo.
 
 El widget **Actualizaciones** muestra el número de actualizaciones y de
 mayores, luego los contenedores con una actualización, las mayores primero:
-nombre, versión actual → nueva y una insignia (Mayor, Menor, Parche, Digest).
-Al pulsar se ven la imagen y, cuando WUD lo conoce, un enlace a las notas de la
-versión. Si no hay ninguna: «Todos los contenedores están actualizados.». El
+nombre, versión actual → nueva y una insignia (Mayor, Menor, Parche, Digest,
+Actualización).
+Al pulsar se ven la imagen y un enlace «Más información» (la página de la
+imagen, o las notas de la versión si WUD tiene una plantilla de enlace). Si no hay ninguna: «Todos los contenedores están actualizados.». El
 botón **Comprobar** pide a WUD que compruebe todos los contenedores (WUD 9
 responde en segundo plano, el widget se actualiza en un minuto).
 
@@ -129,8 +130,8 @@ vuelve sin anunciarse dos veces.
 
 ### Ideas de escenas
 
-- Cada domingo a las 10:00, **Comprobar actualizaciones de contenedores**, y
-  después enviar un mensaje con `[Actualizaciones disponibles]` si es mayor que 0.
+- Cada domingo a las 10:00, **Comprobar actualizaciones de contenedores**,
+  esperar 2 minutos (WUD comprueba en segundo plano) y después enviar un mensaje con `[Actualizaciones disponibles]` si es mayor que 0.
 - **Actualización de contenedor disponible**, tipo **Mayor**: enviarse un
   mensaje «`container`: `current_version` → `new_version`, lea las notas de la
   versión antes de actualizar».

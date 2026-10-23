@@ -87,8 +87,9 @@ id: a container recreated to update it stays the same device.
 
 The **Container updates** widget shows the number of updates and of major ones,
 then the containers with an update, majors first: name, current → new version
-and a badge (Major, Minor, Patch, Digest). A tap shows the image and, when WUD
-knows it, a link to the release notes. When there is none: "Up to date". The
+and a badge (Major, Minor, Patch, Digest, Update). A tap shows the image and a "More info" link
+(the image page, or the release notes when WUD has a link template for it).
+When there is none: "Every container is up to date.". The
 **Check now** button asks WUD to check every container (WUD 9 answers in the
 background, the widget follows within a minute).
 
@@ -117,8 +118,8 @@ announced twice.
 
 ### Scene ideas
 
-- Every Sunday at 10:00, **Check for container updates**, then send a message
-  with `[Updates available]` if it is above 0.
+- Every Sunday at 10:00, **Check for container updates**, wait 2 minutes (WUD
+  checks in the background), then send a message with `[Updates available]` if it is above 0.
 - **Container update available**, kind **Major**: send yourself a message
   "`container`: `current_version` → `new_version`, read the release notes
   before updating".

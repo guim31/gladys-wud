@@ -26,9 +26,9 @@
       },
       "description": {
         "en": "Enter the address of WUD (port 3000 by default) and its credentials: a user and password, or an API token (WUD 9, profile → API tokens; the write scope is only needed for \"Check now\"). The integration never updates a container.",
-        "fr": "Saisissez l'adresse de WUD (port 3000 par défaut) et ses identifiants : un utilisateur et un mot de passe, ou un jeton d'API (WUD 9, profil → API tokens ; l'écriture ne sert qu'à « Vérifier maintenant »). L'intégration ne met jamais un conteneur à jour.",
+        "fr": "Saisissez l'adresse de WUD (port 3000 par défaut) et ses identifiants : un utilisateur et un mot de passe, ou un jeton d'API (WUD 9, profil → API tokens ; l'écriture ne sert qu'à « Vérifier »). L'intégration ne met jamais un conteneur à jour.",
         "de": "Gib die Adresse von WUD (standardmäßig Port 3000) und die Zugangsdaten ein: Benutzer und Passwort oder ein API-Token (WUD 9, Profil → API tokens; Schreibrechte braucht nur „Jetzt prüfen“). Die Integration aktualisiert nie einen Container.",
-        "es": "Introduzca la dirección de WUD (puerto 3000 por defecto) y sus credenciales: usuario y contraseña, o un token de API (WUD 9, perfil → API tokens; la escritura solo sirve para «Comprobar ahora»). La integración nunca actualiza un contenedor."
+        "es": "Introduzca la dirección de WUD (puerto 3000 por defecto) y sus credenciales: usuario y contraseña, o un token de API (WUD 9, perfil → API tokens; la escritura solo sirve para «Comprobar»). La integración nunca actualiza un contenedor."
       },
       "links": [
         {

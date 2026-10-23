@@ -96,8 +96,8 @@ appareil.
 Le widget **Mises à jour conteneurs** affiche le nombre de mises à jour et de
 majeures, puis les conteneurs avec une mise à jour, majeures d'abord : nom,
 version actuelle → nouvelle et un badge (Majeure, Mineure, Correctif,
-Empreinte). Un appui montre l'image et, quand WUD la connaît, un lien vers les
-notes de version. S'il n'y en a aucune : « Tous les conteneurs sont à jour. ».
+Empreinte, Mise à jour). Un appui montre l'image et un lien « En savoir plus » (la page de
+l'image, ou les notes de version si WUD a un modèle de lien pour elle). S'il n'y en a aucune : « Tous les conteneurs sont à jour. ».
 Le bouton **Vérifier** demande à WUD de vérifier tous les conteneurs (WUD 9
 répond en arrière-plan, le widget suit dans la minute).
 
@@ -127,8 +127,8 @@ appliquée, et revient sans être annoncée deux fois.
 
 ### Idées de scènes
 
-- Chaque dimanche à 10 h, **Vérifier les mises à jour des conteneurs**, puis
-  envoyer un message avec `[Mises à jour disponibles]` si elle dépasse 0.
+- Chaque dimanche à 10 h, **Vérifier les mises à jour des conteneurs**,
+  attendre 2 minutes (WUD vérifie en arrière-plan), puis envoyer un message avec `[Mises à jour disponibles]` si elle dépasse 0.
 - **Mise à jour de conteneur disponible**, type **Majeure** : s'envoyer un
   message « `container` : `current_version` → `new_version`, lire les notes de
   version avant de mettre à jour ».

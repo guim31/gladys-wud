@@ -85,14 +85,24 @@ export function normalizeContainer(raw) {
       kind = ['major', 'minor', 'patch'].includes(update.semverDiff) ? update.semverDiff : 'other';
     }
   }
-  const localDigest = shortDigest(update.localValue) ?? shortDigest(image.digest?.value);
-  const current = digest && localDigest ? `${tag} (${localDigest})` : tag;
+  const localDigest = digest
+    ? (shortDigest(update.localValue) ?? shortDigest(image.digest?.value))
+    : shortDigest(image.digest?.value);
+  // A moving tag watched by digest always shows its digest, update or not.
+  const showDigest = digest || image.digest?.watch === true;
+  const current = showDigest && localDigest ? `${tag} (${localDigest})` : tag;
   let latest = null;
   if (kind === 'digest') {
     const remote = shortDigest(update.remoteValue) ?? shortDigest(source.result?.digest);
     latest = remote ? `${tag} (${remote})` : tag;
   } else if (kind) {
     latest = text(update.remoteValue) ?? text(source.result?.tag);
+    if (!latest || latest === tag) {
+      // WUD fell back on the creation date of the image: same tag, rebuilt.
+      const remote =
+        shortDigest(source.result?.digest) ?? text(source.result?.created)?.slice(0, 10);
+      latest = remote ? `${tag} (${remote})` : tag;
+    }
   }
   return {
     id: text(source.id) ?? '',
@@ -110,6 +120,9 @@ export function normalizeContainer(raw) {
     latest: kind ? (latest ?? '?') : null,
     link: text(source.result?.link) ?? text(source.link),
     error: text(source.error?.message),
+    // WUD 9 hides an update while snoozed or cooling down: not an update
+    // applied, the same one comes back afterwards.
+    hidden: source.isSnoozed === true || source.isCoolingDown === true,
   };
 }
 
@@ -138,7 +151,7 @@ export class WudClient {
     this.request = request;
     this.timeoutMs = timeoutMs;
     if (token) {
-      this.authorization = `Bearer ${token}`;
+      this.authorization = `Bearer ${token.replace(/^Bearer\s+/i, '')}`;
     } else if (username) {
       this.authorization = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
     } else {
@@ -229,13 +242,14 @@ export class WudClient {
 
   /**
    * Every watcher checks its containers now. WUD 9 answers at once (202);
-   * WUD 8 answers once done: a time-out then only means it is still checking.
+   * WUD 8 answers once done: a time-out after the connection then only means
+   * it is still checking. Shorter than the 30 s of the widget button.
    */
   async watchAll() {
     try {
-      await this.call('/api/containers/watch?async=true', { method: 'POST', timeoutMs: 30_000 });
+      await this.call('/api/containers/watch?async=true', { method: 'POST', timeoutMs: 20_000 });
     } catch (err) {
-      if (err.kind !== ERROR_KINDS.UNREACHABLE || err.code !== 'ETIMEDOUT') {
+      if (err.kind !== ERROR_KINDS.UNREACHABLE || err.code !== 'ERESPONSETIMEOUT') {
         throw err;
       }
     }

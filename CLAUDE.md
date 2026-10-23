@@ -225,6 +225,16 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
   vérification après un redémarrage. D'où la règle des déclencheurs : « appliquée » = une mise à jour annoncée **et**
   une autre image (`tag|image.id`) **et** plus de mise à jour ; « disponible » = une version distante différente de
   la dernière annoncée (gardée dans `/data`). Un snooze ne vaut donc ni « appliquée » ni nouvelle annonce.
+- Un conteneur **snoozé / en cooldown** (`isSnoozed`, `isCoolingDown`) ou **en erreur** (`error.message`, par exemple un
+  429 du registre juste après sa recréation : WUD l'insère alors sans mise à jour) ne fait rien conclure : son entrée
+  de `/data` est gardée telle quelle jusqu'à une lecture propre (relecture indépendante du 23/10).
+- Changer d'adresse WUD repart de zéro (les clés `local.<nom>` se recoupent d'un hôte à l'autre). Une première liste
+  vide (WUD qui redémarre sans store) ne compte pas comme première lecture.
+- `seenAt` n'est rafraîchi qu'une fois par jour, sinon `/data` serait réécrit à chaque lecture.
+- `watchAll` (WUD 8 synchrone) : délai client de 20 s, sous les 30 s du bouton de widget ; seul un time-out **après
+  connexion** (`ERESPONSETIMEOUT`, `src/wud/http.js`) vaut « en cours », un serveur muet reste « ne répond pas ».
+- « Vérifier » un conteneur : son id peut avoir changé depuis la dernière lecture (recréé) ; sur 404, relire et
+  réessayer une fois.
 - La première lecture après l'installation (fichier `/data` absent) n'annonce rien. Un conteneur absent de la liste
   est gardé 7 jours dans `/data` : supprimé puis recréé (docker compose), il garde son historique.
 - `updateKind.semverDiff` vaut `major`, `minor`, `patch`, `prerelease` ou `unknown` ; `kind: digest` pour un tag
@@ -237,7 +247,10 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 Banc du 23/10/2026 : `docker:dind` isolé (réseau `gladys-test-wud`, jamais le socket de l'hôte) avec `nginx:1.25.0`,
 `alpine:3.18`, `redis:7.0.0`, `busybox:latest` et une image d'un registre inconnu ; `ghcr.io/getwud/wud:latest`
 (9.5.0, utilisateur admin + jeton) et `ghcr.io/getwud/wud:8` (8.4.0, sans authentification) le surveillent par
-`WUD_WATCHER_LOCAL_HOST`/`PORT`. Les réponses sont dans `test/fixtures/wud/`. Le registre miroir de dind est
+`WUD_WATCHER_LOCAL_HOST`/`PORT`. Les réponses sont dans `test/fixtures/wud/`. Vérifié de bout en bout dans l'image verrouillée (`--read-only`,
+`--cap-drop ALL`, 256 Mo) contre ces WUD : Basic, jeton read (vérification refusée proprement), jeton write, WUD 8,
+mauvais mot de passe, WUD absent ; puis alpine recréé en 3.24 et un memcached 1.6.0 ajouté pendant l'arrêt : au
+redémarrage, `update_applied` et `update_available` partent une fois chacun. Le registre miroir de dind est
 `mirror.gcr.io` (évite le 429 de Docker Hub).
 
 ## Store

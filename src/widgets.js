@@ -5,7 +5,7 @@
 // update, and how big it is. So the widget shows the number of updates and of
 // major ones, then the containers with an update, majors first: name, current
 // → new version, a badge with the kind of update; a tap opens the detail
-// (image, link to the release notes when WUD has one). One button: check every
+// (image, link to the image page or its release notes, as WUD gives it). One button: check every
 // container now.
 //
 // The figures are sent as values, not bound to device features: the widget
@@ -17,7 +17,7 @@
 
 import { WIDGET_COLORS } from '@gladysassistant/integration-sdk';
 import { WIDGET_KEY } from './hub.js';
-import { pick } from './texts.js';
+import { CONNECTION_TEXT, pick } from './texts.js';
 
 // Action key of the button: permanent once published.
 export const ACTIONS = Object.freeze({ CHECK_ALL: 'check_all' });
@@ -53,7 +53,7 @@ export const TEXT = {
     other: { en: 'Update', fr: 'Mise à jour', de: 'Update', es: 'Actualización' },
   },
   image: { en: 'Image', fr: 'Image', de: 'Image', es: 'Imagen' },
-  notes: { en: 'Release notes', fr: 'Notes de version', de: 'Versionshinweise', es: 'Notas' },
+  more_info: { en: 'More info', fr: 'En savoir plus', de: 'Mehr erfahren', es: 'Más información' },
   checkAll: { en: 'Check now', fr: 'Vérifier', de: 'Jetzt prüfen', es: 'Comprobar' },
   checking: {
     en: 'WUD is checking the registries, the result follows in a minute.',
@@ -94,7 +94,7 @@ export function cards(pending, language) {
       ),
     };
     if (/^https:\/\//i.test(container.link ?? '')) {
-      item.links = [{ url: container.link, label: t(TEXT.notes, language) }];
+      item.links = [{ url: container.link, label: t(TEXT.more_info, language) }];
     }
     return item;
   });
@@ -102,7 +102,7 @@ export function cards(pending, language) {
 
 async function get(hub, { language = 'en' }) {
   if (!hub.client) {
-    return message(TEXT.pick, language);
+    return message(hub.config?.invalidUrl ? CONNECTION_TEXT.invalidUrl : TEXT.pick, language);
   }
   const components = [];
   const pending = hub.pendingUpdates();
